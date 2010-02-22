@@ -10,7 +10,7 @@
 #define PDATA 0x0378
 #define PSTAT 0x037A
 
-int pwrite(char addr, char data) {
+void pwrite(char addr, char data) {
 	outb(PEACE, PSTAT);
 	outb(addr, PDATA);
 	outb(LATCH, PSTAT);
