@@ -44,22 +44,22 @@ class SID:
 	@attack.setter
 	def attack(self, value):
 		self._attack = value
-		update_attack_decay()
+		self.update_attack_decay()
 
 	@decay.setter
 	def decay(self, value):
 		self._decay = value
-		update_attack_decay()
+		self.update_attack_decay()
 
 	@sustain.setter
 	def sustain(self, value):
 		self._sustain = value
-		update_sustain_release()
+		self.update_sustain_release()
 
 	@release.setter
 	def release(self, value):
 		self._release = value
-		update_sustain_release()
+		self.update_sustain_release()
 
 	def rawrite(self, addr, data):
 		self.process.stdin.write(chr(addr) + chr(data))
