@@ -27,8 +27,11 @@ int sid_init() {
 		perror("Could not get permissions to LPT1");
 		return 1;
 	}
+	return 0;
+}
+
+int sid_reset() {
 	outb(RESET, PSTAT);
 	usleep(10);
 	outb(PEACE, PSTAT);
-	return 0;
 }
