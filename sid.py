@@ -4,7 +4,7 @@
 from subprocess import Popen, PIPE
 import time
 
-class SID:
+class SID(object):
 	NOISE = 0x80
 	SQUARE = 0x40
 	RAMP = 0x20
