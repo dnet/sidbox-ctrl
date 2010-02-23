@@ -24,7 +24,7 @@ notestart = 60
 
 if len(sys.argv) > 1:
 	try:
-		sid.voice = int(sys.argv)
+		sid.voice = int(sys.argv[1])
 	except: pass
 
 sid.rawrite(sid.voice * 7 + 5, 0x0C)
