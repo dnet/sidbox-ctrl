@@ -5,9 +5,36 @@ from sid import SID
 import sys
 import csv
 import termios, fcntl, os
+from optparse import OptionParser
 
 sid = SID()
 sid.rawrite(0x18, 0x04)
+
+notes = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k']
+notestart = 60
+
+parser = OptionParser()
+parser.add_option('-v', '--voice', dest='voice', help='select SID voice (0-2)')
+parser.add_option('-w', '--waveform', dest='waveform', help='select SID waveform (noise, square, ramp, triangle)')
+(options, args) = parser.parse_args()
+
+try:
+	sid.voice = int(options.voice)
+except: pass
+
+wfs = {
+	'noise': SID.NOISE,
+	'square': SID.SQUARE,
+	'ramp': SID.RAMP,
+	'triangle': SID.TRIANGLE
+}
+
+try:
+	sid.waveform = wfs[options.waveform]
+except: pass
+
+sid.rawrite(sid.voice * 7 + 5, 0x0C)
+sid.rawrite(sid.voice * 7 + 6, 0x04)
 
 fd = sys.stdin.fileno()
 
@@ -18,17 +45,6 @@ termios.tcsetattr(fd, termios.TCSANOW, newattr)
 
 oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
 fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
-
-notes = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k']
-notestart = 60
-
-if len(sys.argv) > 1:
-	try:
-		sid.voice = int(sys.argv[1])
-	except: pass
-
-sid.rawrite(sid.voice * 7 + 5, 0x0C)
-sid.rawrite(sid.voice * 7 + 6, 0x04)
 
 try:
 	while 1:
