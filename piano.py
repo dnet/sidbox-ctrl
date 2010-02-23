@@ -15,6 +15,10 @@ notestart = 60
 parser = OptionParser()
 parser.add_option('-v', '--voice', dest='voice', help='select SID voice (0-2)')
 parser.add_option('-w', '--waveform', dest='waveform', help='select SID waveform (noise, square, ramp, triangle)')
+parser.add_option('-s', '--sustain', dest='sustain', help='set sustain value (0-15)')
+parser.add_option('-d', '--decay', dest='decay', help='set decay value (0-15)')
+parser.add_option('-r', '--release', dest='release', help='set release value (0-15)')
+parser.add_option('-a', '--attack', dest='attack', help='set attack value (0-15)')
 (options, args) = parser.parse_args()
 
 try:
@@ -30,6 +34,22 @@ wfs = {
 
 try:
 	sid.waveform = wfs[options.waveform]
+except: pass
+
+try:
+	sid.sustain = int(options.sustain)
+except: pass
+
+try:
+	sid.decay = int(options.decay)
+except: pass
+
+try:
+	sid.release = int(options.release)
+except: pass
+
+try:
+	sid.attack = int(options.attack)
 except: pass
 
 fd = sys.stdin.fileno()
