@@ -10,7 +10,7 @@
 #define PDATA 0x0378
 #define PSTAT 0x037A
 
-void pwrite(char addr, char data) {
+void sid_write(char addr, char data) {
 	outb(PEACE, PSTAT);
 	outb(addr, PDATA);
 	outb(LATCH, PSTAT);
@@ -21,7 +21,7 @@ void pwrite(char addr, char data) {
 	outb(PEACE, PSTAT);
 }
 
-int pinit() {
+int sid_init() {
 	if (ioperm(PSTAT, 1, 1) || ioperm(PDATA, 1, 1)) {
 		perror("Could not get permissions to LPT1");
 		return 1;
@@ -33,11 +33,11 @@ int pinit() {
 }
 
 int main() {
-	if (pinit()) return 1;
-	pwrite(0x18, 0x0F);
-	pwrite(0x01, 0x10);
-	pwrite(0x05, 0x0C);
-	pwrite(0x06, 0x04);
-	pwrite(0x04, 0x21);
+	if (sid_init()) return 1;
+	sid_write(0x18, 0x0F);
+	sid_write(0x01, 0x10);
+	sid_write(0x05, 0x0C);
+	sid_write(0x06, 0x04);
+	sid_write(0x04, 0x21);
 	return 0;
 }
