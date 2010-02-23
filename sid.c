@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/io.h>
+#include "sid.h"
 
 #define LATCH 0x00
 #define SIDCS 0x01
@@ -29,15 +30,5 @@ int sid_init() {
 	outb(RESET, PSTAT);
 	usleep(10);
 	outb(PEACE, PSTAT);
-	return 0;
-}
-
-int main() {
-	if (sid_init()) return 1;
-	sid_write(0x18, 0x0F);
-	sid_write(0x01, 0x10);
-	sid_write(0x05, 0x0C);
-	sid_write(0x06, 0x04);
-	sid_write(0x04, 0x21);
 	return 0;
 }

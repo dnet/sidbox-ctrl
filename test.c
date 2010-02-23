@@ -1,0 +1,11 @@
+#include "sid.h"
+
+int main() {
+	if (sid_init()) return 1;
+	sid_write(0x18, 0x0F);
+	sid_write(0x01, 0x10);
+	sid_write(0x05, 0x0C);
+	sid_write(0x06, 0x04);
+	sid_write(0x04, 0x21);
+	return 0;
+}
