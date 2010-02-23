@@ -8,8 +8,6 @@ import termios, fcntl, os
 
 sid = SID()
 sid.rawrite(0x18, 0x04)
-sid.rawrite(0x05, 0x0C)
-sid.rawrite(0x06, 0x04)
 
 fd = sys.stdin.fileno()
 
@@ -23,6 +21,14 @@ fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
 
 notes = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k']
 notestart = 60
+
+if len(sys.argv) > 1:
+	try:
+		sid.voice = int(sys.argv)
+	except: pass
+
+sid.rawrite(sid.voice * 7 + 5, 0x0C)
+sid.rawrite(sid.voice * 7 + 6, 0x04)
 
 try:
 	while 1:
