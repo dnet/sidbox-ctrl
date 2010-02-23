@@ -33,9 +33,6 @@ try:
 	sid.waveform = wfs[options.waveform]
 except: pass
 
-sid.rawrite(sid.voice * 7 + 5, 0x0C)
-sid.rawrite(sid.voice * 7 + 6, 0x04)
-
 fd = sys.stdin.fileno()
 
 oldterm = termios.tcgetattr(fd)
