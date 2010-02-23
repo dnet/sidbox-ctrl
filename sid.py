@@ -17,6 +17,7 @@ class SID(object):
 		self._decay = 12
 		self._sustain = 0
 		self._release = 4
+		self._volume = 15
 		self.first_play = True
 
 	def update_attack_decay(self):
@@ -61,6 +62,18 @@ class SID(object):
 		self._release = value
 		self.update_sustain_release()
 
+	@property
+	def volume(self):
+		return _volume
+
+	@volume.setter
+	def volume(self, value):
+		self._volume = value
+		self.update_volume()
+
+	def update_volume(self):
+		self.rawrite(0x18, self._volume & 0x0F)
+
 	def rawrite(self, addr, data):
 		self.process.stdin.write(chr(addr) + chr(data))
 
@@ -69,6 +82,7 @@ class SID(object):
 			self.first_play = False
 			self.update_attack_decay()
 			self.update_sustain_release()
+			self.update_volume()
 		self.rawrite(self.voice * 7, freq & 0xFF)
 		self.rawrite(self.voice * 7 + 1, (freq >> 8) & 0xFF)
 		self.rawrite(self.voice * 7 + 4, 0x00)

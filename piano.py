@@ -8,7 +8,6 @@ import termios, fcntl, os
 from optparse import OptionParser
 
 sid = SID()
-sid.rawrite(0x18, 0x04)
 
 notes = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k']
 notestart = 60
