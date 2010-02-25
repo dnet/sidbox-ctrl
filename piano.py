@@ -3,7 +3,6 @@
 
 from sid import SID
 import sys
-import csv
 import termios, fcntl, os
 from optparse import OptionParser
 
