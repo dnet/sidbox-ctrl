@@ -76,8 +76,8 @@ class SID(object):
 	SQUARE = 0x40
 	RAMP = 0x20
 	TRIANGLE = 0x10
-	def __init__(self):
-		self.process = Popen(['./cat'], stdin=PIPE)
+	def __init__(self, catpath = './cat'):
+		self.process = Popen(catpath, stdin = PIPE)
 		self.volume = 15
 		self.voices = [
 			Voice(self, 0),

@@ -17,6 +17,7 @@ parser.add_option('-s', '--sustain', dest='sustain', help='set sustain value (0-
 parser.add_option('-d', '--decay', dest='decay', help='set decay value (0-15)')
 parser.add_option('-r', '--release', dest='release', help='set release value (0-15)')
 parser.add_option('-a', '--attack', dest='attack', help='set attack value (0-15)')
+parser.add_option('-c', '--catpath', dest='catpath', help='set \'cat\' path')
 (options, args) = parser.parse_args()
 
 try:
@@ -24,7 +25,12 @@ try:
 except:
 	voice = 0
 
-sid = SID().voices[voice]
+try:
+	sidobj = SID(options.catpath)
+except:
+	sidobj = SID()
+
+sid = sidobj.voices[voice]
 
 wfs = {
 	'noise': SID.NOISE,
