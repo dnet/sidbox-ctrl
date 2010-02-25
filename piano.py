@@ -23,7 +23,6 @@ try:
 	voice = int(options.voice)
 except:
 	voice = 0
-	pass
 
 sid = SID().voices[voice]
 
