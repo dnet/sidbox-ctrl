@@ -7,8 +7,6 @@ import csv
 import termios, fcntl, os
 from optparse import OptionParser
 
-sid = SID()
-
 notes = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k']
 notestart = 60
 
@@ -22,8 +20,12 @@ parser.add_option('-a', '--attack', dest='attack', help='set attack value (0-15)
 (options, args) = parser.parse_args()
 
 try:
-	sid.voice = int(options.voice)
-except: pass
+	voice = int(options.voice)
+except:
+	voice = 0
+	pass
+
+sid = SID().voices[voice]
 
 wfs = {
 	'noise': SID.NOISE,
