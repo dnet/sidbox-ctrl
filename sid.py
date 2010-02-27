@@ -1,9 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# sid.py - managed native interface to the SIDbox in Python
+#
+# Copyright (c) 2010 András Veres-Szentkirályi
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following
+# conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 
 from subprocess import Popen, PIPE
 import time
 
+# Voice class -- an instance represents one of the tree voices in a SID chip
 class Voice(object):
 	def __init__(self, sid, voice):
 		self._voice = voice
@@ -68,9 +94,11 @@ class Voice(object):
 	def rawrite(self, addr, data):
 		self._sid.rawrite(addr, data)
 
+	# play a note using MIDI values (69 = A4 [440 Hz], +- 1 / half note)
 	def playmidinote(self, note, delay):
 		self.playfreq(int(round(274 * (1.05946309436 ** (note - 12)))), delay)
 
+# SID class -- an instance represents the whole SID chip
 class SID(object):
 	NOISE = 0x80
 	SQUARE = 0x40
