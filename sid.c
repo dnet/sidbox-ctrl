@@ -58,7 +58,7 @@ int sid_init() {
 	return 0;
 }
 
-int sid_reset() {
+void sid_reset() {
 	outb(RESET, PSTAT);
 	usleep(10);
 	outb(PEACE, PSTAT);
