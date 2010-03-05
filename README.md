@@ -1,6 +1,6 @@
 SIDbox controller consists of several building blocks, which form a low to high-level API to the SIDbox project at the Hungarian Autonomous Center for Knowledge (H.A.C.K.).
 
-![Connections between building blocks](connections.png)
+![Connections between building blocks](http://vsza.hu/sidbox-connections.png)
 
 Low-level C API
 ===============
