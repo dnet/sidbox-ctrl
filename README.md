@@ -1,7 +1,7 @@
 SIDbox controller consists of several building blocks, which form a low to high-level API to the SIDbox project at the Hungarian Autonomous Center for Knowledge (H.A.C.K.).
 
 Low-level C API
-=============
+===============
 
 The low-level API provides several primitives in sid.c
 
@@ -22,6 +22,11 @@ A simple program called cat.c translates two byte commands into SID writes, whic
  - any programming language which can write to the standard output can be used to control the SIDbox.
 
 The TCP interface makes the whole construct even more extensible by adding a netcat TCP listener to cat's standard input, so the SIDbox can be controlled from any other networked machine (even on the other side of the Internet).
+
+Arduino USB-LPT interface
+=========================
+
+Notebooks and netbooks rarely have LPT1 nowadays, so we designed an Arduino USB-LPT interface, which provides a similar interface to access the SIDbox like the one for standard I/O. It doesn't need any libraries for the Arduino side, the vanilla Arduino environment can be used to compile and upload it. The electrical connections needed for this solution can be found after the license in the cat-arduino.pde file. On the PC side, the connection is handled by the usb.sh script, which depends only on setserial (Debian/Ubuntu package is called setserial).
 
 High-level Python API
 =====================
