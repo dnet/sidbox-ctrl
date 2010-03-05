@@ -28,7 +28,7 @@ The TCP interface makes the whole construct even more extensible by adding a net
 Arduino USB-LPT interface
 =========================
 
-Notebooks and netbooks rarely have LPT1 nowadays, so we designed an Arduino USB-LPT interface, which provides a similar interface to access the SIDbox like the one for standard I/O. It doesn't need any libraries for the Arduino side, the vanilla Arduino environment can be used to compile and upload it. The electrical connections needed for this solution can be found after the license in the cat-arduino.pde file. On the PC side, the connection is handled by the usb.sh script, which depends only on setserial (Debian/Ubuntu package is called setserial).
+Notebooks and netbooks rarely have LPT1 nowadays, so we designed an Arduino USB-LPT interface, which provides a similar interface to access the SIDbox like the one for standard I/O. It doesn't need any libraries for the Arduino side, the vanilla Arduino environment can be used to compile and upload it. The electrical connections needed for this solution can be found after the license in the cat-arduino.pde file. On the PC side, the connection is handled by the usb.sh script, which depends only on setserial (Debian/Ubuntu package is called setserial). For platforms where setserial is unavailable, a .Net/Mono bridge is provided as well. In both cases you may need to edit the port to match your hardware (default is /dev/ttyUSB0 -- it's usually /dev/cu.* on Mac or COM* on Windows).
 
 High-level Python API
 =====================

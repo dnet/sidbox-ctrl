@@ -1,7 +1,11 @@
 TEST_OBJECTS=test.o sid.o
 CAT_OBJECTS=cat.o sid.o
+CSC=gmcs
 
-all: cat test
+all: cat test usb.exe
+
+usb.exe: usb.cs
+	$(CSC) $<
 
 cat: $(CAT_OBJECTS)
 	$(CC) $(CAT_OBJECTS) -o $@
@@ -13,6 +17,6 @@ test: $(TEST_OBJECTS)
 	$(CC) $< -c -o $@ -O
 
 clean:
-	rm -f test cat *.o
+	rm -f test cat *.o usb.exe
 
 .PHONY: clean all
