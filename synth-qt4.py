@@ -77,7 +77,7 @@ class AdsrWidget(QtGui.QLabel):
 		i = 0
 		pos = 0
 		for d in self.data:
-			paint.drawLine(pos, AdsrWidger.MAX - self.levels[i],
+			paint.drawLine(pos, AdsrWidget.MAX - self.levels[i],
 				pos + self.data[i], AdsrWidget.MAX - self.levels[i + 1])
 			pos += self.data[i]
 			i += 1
