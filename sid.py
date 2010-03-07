@@ -30,7 +30,7 @@ from subprocess import Popen, PIPE
 from threading import Lock
 import time
 
-# Voice class -- an instance represents one of the tree voices in a SID chip
+# Voice class -- an instance represents one of the three voices in a SID chip
 class Voice(object):
 	def __init__(self, sid, voice):
 		self.notifylist = []
