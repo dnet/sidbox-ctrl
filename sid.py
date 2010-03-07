@@ -76,10 +76,14 @@ class Voice(object):
 		self._release = value
 		self.update_sustain_release()
 
+	def get_voicenum(self):
+		return self._voice
+
 	attack = property(get_attack, set_attack)
 	decay = property(get_decay, set_decay)
 	sustain = property(get_sustain, set_sustain)
 	release = property(get_release, set_release)
+	voicenum = property(get_voicenum)
 	def playfreq(self, freq, delay):
 		self.rawrite(self._voice * 7, freq & 0xFF)
 		self.rawrite(self._voice * 7 + 1, (freq >> 8) & 0xFF)
