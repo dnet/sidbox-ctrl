@@ -27,6 +27,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 from subprocess import Popen, PIPE
+from threading import Lock
 import time
 
 # Voice class -- an instance represents one of the tree voices in a SID chip
@@ -40,6 +41,8 @@ class Voice(object):
 		self._decay = 12
 		self._sustain = 0
 		self._release = 4
+		self._gates = 0
+		self._gatelock = Lock()
 		self.pulse_width = 0.5
 		self.update_attack_decay()
 		self.update_sustain_release()
@@ -114,9 +117,17 @@ class Voice(object):
 	def playfreq(self, freq, delay):
 		self.rawrite(self._voice * 7, freq & 0xFF)
 		self.rawrite(self._voice * 7 + 1, (freq >> 8) & 0xFF)
-		self.rawrite(self._voice * 7 + 4, 0x00)
+		self.rawrite(self._voice * 7 + 4, self.waveform)
 		self.rawrite(self._voice * 7 + 4, self.waveform | 0x01)
+		self._gatelock.acquire()
+		self._gates += 1
+		self._gatelock.release()
 		time.sleep(delay)
+		self._gatelock.acquire()
+		self._gates -= 1
+		if self._gates == 0:
+			self.rawrite(self._voice * 7 + 4, self.waveform)
+		self._gatelock.release()
 
 	def rawrite(self, addr, data):
 		self._sid.rawrite(addr, data)
