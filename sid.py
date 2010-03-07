@@ -40,6 +40,7 @@ class Voice(object):
 		self._decay = 12
 		self._sustain = 0
 		self._release = 4
+		self.pulse_width = 0.5
 		self.update_attack_decay()
 		self.update_sustain_release()
 
@@ -53,6 +54,16 @@ class Voice(object):
 	def update_sustain_release(self):
 		self._notify()
 		self.rawrite(self._voice * 7 + 6, ((self._sustain & 0x0F) << 4) | (self._release & 0x0F))
+
+	def get_pulse_width(self):
+		return self._pulse_width
+	
+	def set_pulse_width(self, value):
+		self._pulse_width = value
+		pw = int(round(value * 4095))
+		self.rawrite(self._voice * 7 + 2, pw & 0x0F)
+		self.rawrite(self._voice * 7 + 3, pw >> 8)
+		self._notify()
 
 	def get_waveform(self):
 		return self._waveform
@@ -98,6 +109,8 @@ class Voice(object):
 	sustain = property(get_sustain, set_sustain)
 	release = property(get_release, set_release)
 	voicenum = property(get_voicenum)
+	pulse_width = property(get_pulse_width, set_pulse_width)
+
 	def playfreq(self, freq, delay):
 		self.rawrite(self._voice * 7, freq & 0xFF)
 		self.rawrite(self._voice * 7 + 1, (freq >> 8) & 0xFF)
