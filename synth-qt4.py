@@ -277,7 +277,6 @@ class RouterWidget(QtGui.QLabel):
 		self.components = []
 		for v in sid.voices:
 			self.init_widget(VoiceSink(v, self))
-		self.setMinimumSize(480, 240)
 		self.arrange()
 
 	def init_widget(self, widget):
@@ -301,6 +300,11 @@ class RouterWidget(QtGui.QLabel):
 				c.move(self.width() - right - c.width(), cpos)
 				cpos = max(cpos + c.height(),
 					self.arrange(cpos, right + c.width() + RouterWidget.PADDING, c))
+		if (scomp == None):
+			leftmost = min(map(lambda x: x.geometry().left(), self.components))
+			self.setMinimumSize(self.width() - leftmost, cpos)
+			for c in self.components:
+				c.move(c.geometry().left() - leftmost, c.geometry().top())
 		return cpos
 
 	def paintEvent(self, event):
