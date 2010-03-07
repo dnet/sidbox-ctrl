@@ -48,42 +48,38 @@ class Voice(object):
 	def update_sustain_release(self):
 		self.rawrite(self._voice * 7 + 6, ((self._sustain & 0x0F) << 4) | (self._release & 0x0F))
 
-	@property
-	def attack(self):
+	def get_attack(self):
 		return self._attack
 
-	@property
-	def decay(self):
+	def get_decay(self):
 		return self._decay
 
-	@property
-	def sustain(self):
+	def get_sustain(self):
 		return self._sustain
 
-	@property
-	def release(self):
+	def get_release(self):
 		return self._release
 
-	@attack.setter
-	def attack(self, value):
+	def set_attack(self, value):
 		self._attack = value
 		self.update_attack_decay()
 
-	@decay.setter
-	def decay(self, value):
+	def set_decay(self, value):
 		self._decay = value
 		self.update_attack_decay()
 
-	@sustain.setter
-	def sustain(self, value):
+	def set_sustain(self, value):
 		self._sustain = value
 		self.update_sustain_release()
 
-	@release.setter
-	def release(self, value):
+	def set_release(self, value):
 		self._release = value
 		self.update_sustain_release()
 
+	attack = property(get_attack, set_attack)
+	decay = property(get_decay, set_decay)
+	sustain = property(get_sustain, set_sustain)
+	release = property(get_release, set_release)
 	def playfreq(self, freq, delay):
 		self.rawrite(self._voice * 7, freq & 0xFF)
 		self.rawrite(self._voice * 7 + 1, (freq >> 8) & 0xFF)
@@ -113,14 +109,14 @@ class SID(object):
 			Voice(self, 2)
 		]
 
-	@property
-	def volume(self):
+	def get_volume(self):
 		return _volume
 
-	@volume.setter
-	def volume(self, value):
+	def set_volume(self, value):
 		self._volume = value
 		self.update_volume()
+
+	volume = property(get_volume, set_volume)
 
 	def update_volume(self):
 		self.rawrite(0x18, self._volume & 0x0F)
