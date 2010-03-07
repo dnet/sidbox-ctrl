@@ -85,38 +85,6 @@ class AdsrWidget(QtGui.QLabel):
 
 		paint.end()
 
-class ArpeggioEffect(QtGui.QPushButton):
-	DESC = 'arpeggio effect'
-	def __init__(self, output, parent = None):
-		QtGui.QPushButton.__init__(self, 'Arpeggio', parent)
-		self.resize(100, 25)
-		self.output = output
-		self.thread = None
-	
-	def playmidinote(self, note, delay):
-		if self.thread != None:
-			self.thread.stop_at_next()
-			self.thread.join()
-		self.thread = ArpeggioThread(self.output, note)
-		self.thread.start()
-
-class ArpeggioThread(Thread):
-	def __init__(self, voice, base):
-		Thread.__init__(self)
-		self.voice = voice
-		self.base = base
-		self._san = False
-	def stop_at_next(self):
-		self._san = True
-	def run(self):
-		arpeggio = [1, 5, 10]
-		for i in range(10):
-			for f in arpeggio:
-				if (self._san):
-					return
-				self.voice.playmidinote(self.base + f, 0.02)
-
-
 class PianoInput(QtGui.QLineEdit):
 	DESC = 'piano input'
 	NOTES = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k']
@@ -303,6 +271,47 @@ class AddAction(QtGui.QAction):
 	def adder(self, b):
 		self.router.comp_callback(self.aclass, self.sink)
 
+class LooperEffect(QtGui.QPushButton):
+	DESC = 'looper effect'
+	def __init__(self, output, parent = None):
+		QtGui.QPushButton.__init__(self, 'Looper', parent)
+		self.resize(100, 25)
+		self.output = output
+		self.lthread = None
+		self.connect(self, QtCore.SIGNAL('clicked()'), self.clickd)
+	
+	def clickd(self):
+		self.lthread.stop_at_next()
+		self.lthread = None
+		self.setMenu(self._tmpmenu)
+		self.setText('Looper')
+	
+	def playmidinote(self, note, delay):
+		if self.lthread != None:
+			self.lthread.stop_at_next()
+			self.lthread.join()
+		else:
+			self._tmpmenu = self.menu()
+			self.setMenu(None)
+			self.setText('Stop')
+		self.lthread = LooperThread(self.output, note, delay)
+		self.lthread.start()
+
+class LooperThread(Thread):
+	def __init__(self, output, note, delay):
+		Thread.__init__(self)
+		self.output = output
+		self.note = note
+		self.delay = delay
+		self._san = False
+
+	def stop_at_next(self):
+		self._san = True
+
+	def run(self):
+		while not self._san:
+			self.output.playmidinote(self.note, self.delay)
+
 class VoiceSink(QtGui.QPushButton):
 	def __init__(self, voice, parent = None):
 		QtGui.QPushButton.__init__(self, 'Voice %d' % voice.voicenum, parent)
@@ -323,7 +332,7 @@ class RouterWidget(QtGui.QLabel):
 		self.arrange()
 
 	def init_widget(self, widget):
-		actions = [PianoInput, NoteShifter, ArpeggioEffect, SequencerInput]
+		actions = [PianoInput, NoteShifter, SequencerInput, LooperEffect]
 		menu = QtGui.QMenu(self)
 		for a in actions:
 			menu.addAction(AddAction(a, self, widget, menu))
