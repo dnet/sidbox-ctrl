@@ -32,6 +32,7 @@ import time
 # Voice class -- an instance represents one of the tree voices in a SID chip
 class Voice(object):
 	def __init__(self, sid, voice):
+		self.notifylist = []
 		self._voice = voice
 		self._sid = sid
 		self.waveform = SID.RAMP
@@ -42,10 +43,15 @@ class Voice(object):
 		self.update_attack_decay()
 		self.update_sustain_release()
 
+	def _notify(self):
+		for i in self.notifylist: i()
+
 	def update_attack_decay(self):
+		self._notify()
 		self.rawrite(self._voice * 7 + 5, ((self._attack & 0x0F) << 4) | (self._decay & 0x0F))
 
 	def update_sustain_release(self):
+		self._notify()
 		self.rawrite(self._voice * 7 + 6, ((self._sustain & 0x0F) << 4) | (self._release & 0x0F))
 
 	def get_attack(self):
