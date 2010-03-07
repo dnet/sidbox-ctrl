@@ -31,6 +31,7 @@ from PyQt4 import QtGui, QtCore
 from optparse import OptionParser
 from threading import Thread
 import sys
+import time
 
 class FourBitSlider(QtGui.QSlider):
 	def __init__(self, default, reporter, parent = None):
@@ -133,6 +134,48 @@ class PianoInput(QtGui.QLineEdit):
 	
 	def setMenu(self, menu):
 		pass
+
+class SequencerInput(QtGui.QLineEdit):
+	DESC = 'sequencer input'
+	def __init__(self, output, parent = None):
+		QtGui.QLineEdit.__init__(self, parent)
+		self.output = output
+		self.thread = None
+		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
+		self.connect(self,
+			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
+
+	def cmr(self, point):
+		self.menu.exec_(self.mapToGlobal(point))
+
+	def setMenu(self, menu):
+		self.menu = menu
+	
+	def playmidinote(self, note, delay):
+		if self.thread != None:
+			self.thread.join()
+		self.thread = SequencerThread(self.text(), self.output, note)
+		self.thread.start()
+
+class SequencerThread(Thread):
+	def __init__(self, sequence, output, base):
+		Thread.__init__(self)
+		self.output = output
+		self.sequence = sequence
+		self.base = base
+	
+	def run(self):
+		for seq in self.sequence.split(','):
+			data = seq.split('-')
+			try:
+				delay = float(data[1]) / 1000
+				try:
+					self.output.playmidinote(
+						self.base + int(data[0]), delay)
+				except:
+					time.sleep(delay)
+			except:
+				pass
 
 class NoteShifter(QtGui.QSpinBox):
 	DESC = 'note shifter'
@@ -280,7 +323,7 @@ class RouterWidget(QtGui.QLabel):
 		self.arrange()
 
 	def init_widget(self, widget):
-		actions = [PianoInput, NoteShifter, ArpeggioEffect]
+		actions = [PianoInput, NoteShifter, ArpeggioEffect, SequencerInput]
 		menu = QtGui.QMenu(self)
 		for a in actions:
 			menu.addAction(AddAction(a, self, widget, menu))
