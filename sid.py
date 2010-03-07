@@ -35,7 +35,7 @@ class Voice(object):
 		self.notifylist = []
 		self._voice = voice
 		self._sid = sid
-		self.waveform = SID.RAMP
+		self._waveform = SID.RAMP
 		self._attack = 0
 		self._decay = 12
 		self._sustain = 0
@@ -53,6 +53,13 @@ class Voice(object):
 	def update_sustain_release(self):
 		self._notify()
 		self.rawrite(self._voice * 7 + 6, ((self._sustain & 0x0F) << 4) | (self._release & 0x0F))
+
+	def get_waveform(self):
+		return self._waveform
+	
+	def set_waveform(self, value):
+		self._waveform = value
+		self._notify()
 
 	def get_attack(self):
 		return self._attack
@@ -85,6 +92,7 @@ class Voice(object):
 	def get_voicenum(self):
 		return self._voice
 
+	waveform = property(get_waveform, set_waveform)
 	attack = property(get_attack, set_attack)
 	decay = property(get_decay, set_decay)
 	sustain = property(get_sustain, set_sustain)
