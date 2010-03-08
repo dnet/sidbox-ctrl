@@ -206,15 +206,13 @@ class VoiceWidget(QtGui.QWidget):
 
 		for text in ['W', 'A', 'D', 'S', 'R']:
 			data = self.sliders[text]
-			label = QtGui.QLabel(self)
+			data['label'] = QtGui.QLabel(self)
 			labAbox = QtGui.QVBoxLayout()
 			labAbox.addStretch(1)
 			labAbox.addWidget(QtGui.QLabel(data['txt'], self))
-			labAbox.addWidget(label)
-			s = data['class'](data['val'], data['rep'], self)
-			hbox.addWidget(s)
+			labAbox.addWidget(data['label'])
+			hbox.addWidget(data['class'](data['val'], data['rep'], self))
 			hbox.addLayout(labAbox)
-			data['label'] = label
 		
 		self.voice.notifylist += [self.updateLabels]
 		self.updateLabels()
@@ -344,11 +342,10 @@ class RouterWidget(QtGui.QLabel):
 		self.repaint()
 
 	def arrange(self, cpos = 0, right = 0, scomp = None):
-		for c in self.components:
-			if c.output == scomp:
-				c.move(self.width() - right - c.width(), cpos)
-				cpos = max(cpos + c.height(),
-					self.arrange(cpos, right + c.width() + RouterWidget.PADDING, c))
+		for c in filter(lambda x: x.output == scomp, self.components):
+			c.move(self.width() - right - c.width(), cpos)
+			cpos = max(cpos + c.height(),
+				self.arrange(cpos, right + c.width() + RouterWidget.PADDING, c))
 		if (scomp == None):
 			leftmost = min(map(lambda x: x.geometry().left(), self.components))
 			self.setMinimumSize(self.width() - leftmost, cpos)
