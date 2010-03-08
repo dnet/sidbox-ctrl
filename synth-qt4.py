@@ -178,15 +178,15 @@ class VoiceWidget(QtGui.QWidget):
 		
 		self.voice = voice
 		self.sliders = {
-			'W': { 'rep': self.setW, 'txt': 'Pulse width',
+			'W': { 'rep': self.setW, 'txt': 'Pulse width', 'class': PwSlider,
 				'val': int(self.voice.pulse_width * 4095) },
-			'A': { 'rep': self.setA, 'txt': 'Attack rate',
+			'A': { 'rep': self.setA, 'txt': 'Attack rate', 'class': FourBitSlider,
 				'val': self.voice.attack },
-			'D': { 'rep': self.setD, 'txt': 'Decay rate',
+			'D': { 'rep': self.setD, 'txt': 'Decay rate', 'class': FourBitSlider,
 				'val': self.voice.decay },
-			'S': { 'rep': self.setS, 'txt': 'Sustain level',
+			'S': { 'rep': self.setS, 'txt': 'Sustain level', 'class': FourBitSlider,
 				'val': self.voice.sustain },
-			'R': { 'rep': self.setR, 'txt': 'Release rate',
+			'R': { 'rep': self.setR, 'txt': 'Release rate', 'class': FourBitSlider,
 				'val': self.voice.release }
 		}
 		
@@ -211,10 +211,7 @@ class VoiceWidget(QtGui.QWidget):
 			labAbox.addStretch(1)
 			labAbox.addWidget(QtGui.QLabel(data['txt'], self))
 			labAbox.addWidget(label)
-			if text != 'W':
-				s = FourBitSlider(data['val'], data['rep'], self)
-			else:
-				s = PwSlider(data['val'], data['rep'], self)
+			s = data['class'](data['val'], data['rep'], self)
 			hbox.addWidget(s)
 			hbox.addLayout(labAbox)
 			data['label'] = label
