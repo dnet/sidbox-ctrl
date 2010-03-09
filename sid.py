@@ -143,6 +143,7 @@ class SID(object):
 	RAMP = 0x20
 	TRIANGLE = 0x10
 	def __init__(self, catpath = './cat'):
+		self.notifylist = []
 		self.process = Popen(catpath, stdin = PIPE)
 		self.volume = 15
 		self.voices = [
@@ -150,6 +151,9 @@ class SID(object):
 			Voice(self, 1),
 			Voice(self, 2)
 		]
+
+	def _notify(self):
+		for i in self.notifylist: i()
 
 	def get_volume(self):
 		return self._volume
@@ -161,6 +165,7 @@ class SID(object):
 	volume = property(get_volume, set_volume)
 
 	def update_volume(self):
+		self._notify()
 		self.rawrite(0x18, self._volume & 0x0F)
 
 	def rawrite(self, addr, data):
