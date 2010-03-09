@@ -27,7 +27,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 from subprocess import Popen, PIPE
-from threading import Lock
+from threading import Lock, Timer
 import time
 
 # Voice class -- an instance represents one of the three voices in a SID chip
@@ -142,8 +142,14 @@ class SID(object):
 	SQUARE = 0x40
 	RAMP = 0x20
 	TRIANGLE = 0x10
+	BW_MEASUREMENT_IV = 0.5
 	def __init__(self, catpath = './cat'):
 		self.notifylist = []
+		self._track_bw = False
+		self._bytes_sent = 0
+		self._lastreport = time.clock()
+		self._bwtracker_lock = Lock()
+		self.used_bw = 0
 		self.process = Popen(catpath, stdin = PIPE)
 		self.volume = 15
 		self.voices = [
@@ -151,6 +157,18 @@ class SID(object):
 			Voice(self, 1),
 			Voice(self, 2)
 		]
+
+	def get_track_bw(self):
+		return self._track_bw
+
+	def set_track_bw(self, value):
+		if value and not self._track_bw:
+			self._track_bw = True
+			self._update_bw()
+		elif self._track_bw and not value:
+			self._track_bw = False
+
+	track_bw = property(get_track_bw, set_track_bw)
 
 	def _notify(self):
 		for i in self.notifylist: i()
@@ -168,5 +186,19 @@ class SID(object):
 		self._notify()
 		self.rawrite(0x18, self._volume & 0x0F)
 
+	def _update_bw(self):
+		self._bwtracker_lock.acquire()
+		self.used_bw = self._bytes_sent / SID.BW_MEASUREMENT_IV
+		self._bytes_sent = 0
+		self._bwtracker_lock.release()
+		if self._track_bw:
+			t = Timer(SID.BW_MEASUREMENT_IV, self._update_bw)
+			t.start()
+			self._notify()
+
 	def rawrite(self, addr, data):
 		self.process.stdin.write(chr(addr) + chr(data))
+		if self.track_bw:
+			self._bwtracker_lock.acquire()
+			self._bytes_sent += 2
+			self._bwtracker_lock.release()
