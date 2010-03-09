@@ -30,8 +30,10 @@ from sid import SID
 from PyQt4 import QtGui, QtCore
 from optparse import OptionParser
 from threading import Thread
+from ConfigParser import RawConfigParser
 import sys
 import time
+import uuid
 
 class FourBitSlider(QtGui.QSlider):
 	def __init__(self, default, reporter, parent = None):
@@ -93,6 +95,7 @@ class PianoInput(QtGui.QLineEdit):
 		QtGui.QLineEdit.__init__(self, parent)
 		self.output = output
 		self.resize(25, 25)
+		self.config = {}
 		self.connect(self, QtCore.SIGNAL('textEdited(QString)'), self.playnote)
 
 	def playnote(self, text):
@@ -112,6 +115,14 @@ class SequencerInput(QtGui.QLineEdit):
 		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
 		self.connect(self,
 			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
+
+	def get_config(self):
+		return {'value': self.text()}
+
+	def set_config(self, value):
+		self.setText(value['value'])
+
+	config = property(get_config, set_config)
 
 	def cmr(self, point):
 		self.menu.exec_(self.mapToGlobal(point))
@@ -156,6 +167,14 @@ class NoteShifter(QtGui.QSpinBox):
 		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
 		self.connect(self,
 			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
+
+	def get_config(self):
+		return {'value': self.value()}
+
+	def set_config(self, value):
+		self.setValue(int(value['value']))
+
+	config = property(get_config, set_config)
 
 	def cmr(self, point):
 		self.menu.exec_(self.mapToGlobal(point))
@@ -272,6 +291,7 @@ class LooperEffect(QtGui.QPushButton):
 		self.resize(100, 25)
 		self.output = output
 		self.lthread = None
+		self.config = {}
 		self.connect(self, QtCore.SIGNAL('clicked()'), self.clickd)
 	
 	def clickd(self):
@@ -307,28 +327,33 @@ class LooperThread(Thread):
 			self.output.playmidinote(self.note, self.delay)
 
 class VoiceSink(QtGui.QPushButton):
+	POOL = {}
 	def __init__(self, voice, parent = None):
 		QtGui.QPushButton.__init__(self, 'Voice %d' % voice.voicenum, parent)
 		self.resize(100, 25)
 		self.output = None
 		self.voice = voice
+		self.config = {}
+		VoiceSink.POOL[voice] = self
 	
 	def playmidinote(self, note, delay):
 		self.voice.playmidinote(note, delay)
 
 class RouterWidget(QtGui.QLabel):
 	PADDING = 8
+	SINGLETON = None
+	COMPONENTS = [PianoInput, NoteShifter, SequencerInput, LooperEffect]
 	def __init__(self, voices, parent = None):
 		QtGui.QLabel.__init__(self, parent)
+		RouterWidget.SINGLETON = self
 		self.components = []
 		for v in sid.voices:
 			self.init_widget(VoiceSink(v, self))
 		self.arrange()
 
 	def init_widget(self, widget):
-		actions = [PianoInput, NoteShifter, SequencerInput, LooperEffect]
 		menu = QtGui.QMenu(self)
-		for a in actions:
+		for a in RouterWidget.COMPONENTS:
 			menu.addAction(AddAction(a, self, widget, menu))
 		widget.setMenu(menu)
 		self.components.append(widget)
@@ -339,6 +364,7 @@ class RouterWidget(QtGui.QLabel):
 		self.init_widget(c)
 		self.arrange()
 		self.repaint()
+		return c
 
 	def arrange(self, cpos = 0, right = 0, scomp = None):
 		for c in filter(lambda x: x.output == scomp, self.components):
@@ -388,12 +414,13 @@ class SidStatusBox(QtGui.QGroupBox):
 		self.statlab.setText('Volume\n%d%%\n%d/15\n\nThroughput\n%d Bps' %
 			(100 * vol / 15, vol, self.sid.used_bw))
 
-class MainWindow(QtGui.QWidget):
+class MainWindow(QtGui.QMainWindow):
 	def __init__(self, parent = None):
 		QtGui.QWidget.__init__(self, parent)
 		self.setWindowTitle('SIDbox synthesizer')
 		self.setWindowIcon(QtGui.QIcon('sidbox.png'))
-		
+		self.build_menu()
+
 		effects = QtGui.QGroupBox('Sources', self)
 		eff_hbox = QtGui.QHBoxLayout()
 		eff_hbox.addStretch(1)
@@ -414,9 +441,95 @@ class MainWindow(QtGui.QWidget):
 		vbox.addLayout(stat_eff_hbox)
 		vbox.addWidget(voices)
 
-		self.setLayout(vbox)
+		w = QtGui.QWidget(self)
+		w.setLayout(vbox)
+		self.setCentralWidget(w)
 		self.resize(640, 600)
 		self.center()
+
+	def build_menu(self):
+		menubar = self.menuBar()
+		m_file = menubar.addMenu('&File')
+		load = QtGui.QAction('&Load state...', self)
+		load.setShortcut('Ctrl+L')
+		self.connect(load, QtCore.SIGNAL('triggered()'), self.load_state)
+		m_file.addAction(load)
+		save = QtGui.QAction('&Save state...', self)
+		save.setShortcut('Ctrl+S')
+		self.connect(save, QtCore.SIGNAL('triggered()'), self.save_state)
+		m_file.addAction(save)
+
+	def save_state(self):
+		fn = QtGui.QFileDialog.getSaveFileName(self, 'Save state')
+		if fn == '':
+			return
+		f = open(fn, 'w+')
+		cp = RawConfigParser()
+		sn = 'main'
+		cp.add_section(sn)
+		cp.set(sn, 'volume', sid.volume)
+		for v in sid.voices:
+			sn = 'voice%d' % v.voicenum
+			cp.add_section(sn)
+			cp.set(sn, 'waveform', v.waveform)
+			cp.set(sn, 'pulse_width', v.pulse_width)
+			cp.set(sn, 'attack', v.attack)
+			cp.set(sn, 'decay', v.decay)
+			cp.set(sn, 'sustain', v.sustain)
+			cp.set(sn, 'release', v.release)
+			self.save_sink_state(VoiceSink.POOL[v], cp, sn)
+		cp.write(f)
+		f.close()
+
+	def save_sink_state(self, sink, cp, sn):
+		oid = uuid.uuid4()
+		if cp.has_option(sn, 'sources'):
+			src = '%s,%s' % (cp.get(sn, 'sources'), oid)
+		else:
+			src = oid
+		cp.set(sn, 'sources', src)
+		cp.add_section(oid)
+		cp.set(oid, 'class', sink.__class__.__name__)
+		for k, v in sink.config.iteritems():
+			cp.set(oid, k, v)
+		for i in RouterWidget.SINGLETON.components:
+			if i.output == sink:
+				self.save_sink_state(i, cp, oid)
+
+	def load_state(self):
+		fn = QtGui.QFileDialog.getOpenFileName(self, 'Load state')
+		if fn == '':
+			return
+		cp = RawConfigParser()
+		cp.read([fn])
+		sid.volume = cp.getint('main', 'volume')
+		for v in sid.voices:
+			sn = 'voice%d' % v.voicenum
+			v.waveform = cp.getint(sn, 'waveform')
+			v.pulse_width = cp.getfloat(sn, 'pulse_width')
+			v.attack = cp.getint(sn, 'attack')
+			v.decay = cp.getint(sn, 'decay')
+			v.sustain = cp.getint(sn, 'sustain')
+			v.release = cp.getint(sn, 'release')
+			try:
+				sn = cp.get(cp.get(sn, 'sources'), 'sources')
+				self.load_sink_state(VoiceSink.POOL[v], cp, sn)
+			except:
+				pass
+
+	def load_sink_state(self, sink, cp, sns):
+		for sn in sns.split(','):
+			cn = cp.get(sn, 'class')
+			c = filter(lambda x: x.__name__ == cn, RouterWidget.COMPONENTS)
+			comp = RouterWidget.SINGLETON.comp_callback(c[0], sink)
+			config = {}
+			for i in filter(lambda x: x != 'class' and x != 'sources',
+				cp.options(sn)): config[i] = cp.get(sn, i)
+			comp.config = config
+			try:
+				self.load_sink_state(comp, cp, cp.get(sn, 'sources'))
+			except:
+				pass
 
 	def center(self):
 		screen = QtGui.QDesktopWidget().screenGeometry()
