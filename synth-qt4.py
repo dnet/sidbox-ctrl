@@ -112,6 +112,7 @@ class SequencerInput(QtGui.QLineEdit):
 		QtGui.QLineEdit.__init__(self, parent)
 		self.output = output
 		self.thread = None
+		self.record_mode = False
 		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
 		self.connect(self,
 			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
@@ -129,12 +130,33 @@ class SequencerInput(QtGui.QLineEdit):
 
 	def setMenu(self, menu):
 		self.menu = menu
+		menu.addSeparator()
+		a = menu.addAction('Record mode')
+		a.setCheckable(True)
+		self.connect(a, QtCore.SIGNAL('toggled(bool)'), self._record_toggled)
+
+	def _record_toggled(self, checked):
+		self.record_mode = checked
+		self.base_note = None
 	
 	def playmidinote(self, note, delay):
-		if self.thread != None:
-			self.thread.join()
-		self.thread = SequencerThread(self.text(), self.output, note)
-		self.thread.start()
+		if self.record_mode:
+			if self.base_note == None:
+				self.clear()
+				self.base_note = note
+			else:
+				oldtext = self.text()
+				if (oldtext != ''):
+					oldtext += ','
+				self.setText(oldtext + 'p-%d,%d-%d' %
+					((time.clock() - self.last_note) * 1000,
+					note - self.base_note, delay * 1000))
+			self.last_note = time.clock()
+		else:
+			if self.thread != None:
+				self.thread.join()
+			self.thread = SequencerThread(self.text(), self.output, note)
+			self.thread.start()
 
 class SequencerThread(Thread):
 	def __init__(self, sequence, output, base):
