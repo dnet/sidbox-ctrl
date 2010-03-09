@@ -196,7 +196,7 @@ class VoiceWidget(QtGui.QWidget):
 		self.connect(waveforms, QtCore.SIGNAL('activated(int)'), self.set_waveform)
 
 		hbox = QtGui.QHBoxLayout()
-		hbox.addWidget(QtGui.QLabel('<b>%d</b>' % self.voice.voicenum, self))
+		hbox.addWidget(QtGui.QLabel('<div align="center"><b>%d</b></div>' % self.voice.voicenum, self))
 
 		wfbox = QtGui.QVBoxLayout()
 		wfbox.addStretch(1)
@@ -218,7 +218,6 @@ class VoiceWidget(QtGui.QWidget):
 		self.updateLabels()
 
 		hbox.addWidget(AdsrWidget(self.voice, self))
-		hbox.addStretch(1)
 
 		self.setLayout(hbox)
 
@@ -384,11 +383,9 @@ class MainWindow(QtGui.QWidget):
 		voicebox = QtGui.QVBoxLayout()
 		for v in sid.voices:
 			voicebox.addWidget(VoiceWidget(v, voices))
-		voicebox.addStretch(1)
 		voices.setLayout(voicebox)
 
 		vbox = QtGui.QVBoxLayout()
-		vbox.addStretch(1)
 		vbox.addWidget(effects)
 		vbox.addWidget(voices)
 
