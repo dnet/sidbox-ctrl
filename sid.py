@@ -152,7 +152,7 @@ class SID(object):
 		]
 
 	def get_volume(self):
-		return _volume
+		return self._volume
 
 	def set_volume(self, value):
 		self._volume = value
