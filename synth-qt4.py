@@ -367,6 +367,27 @@ class RouterWidget(QtGui.QLabel):
 
 		paint.end()
 
+class SidStatusBox(QtGui.QGroupBox):
+	def __init__(self, sid, parent = None):
+		QtGui.QGroupBox.__init__(self, 'Status', parent)
+		self.sid = sid
+		self.statlab = QtGui.QLabel(self)
+		hbox = QtGui.QHBoxLayout()
+		hbox.addWidget(FourBitSlider(sid.volume, self.setV, self))
+		hbox.addWidget(self.statlab)
+		self.sid.notifylist += [self.update_label]
+		self.sid.track_bw = True
+		self.update_label()
+		self.setLayout(hbox)
+
+	def setV(self, value):
+		self.sid.volume = value
+
+	def update_label(self):
+		vol = self.sid.volume
+		self.statlab.setText('Volume\n%d%%\n%d/15\n\nThroughput\n%d Bps' %
+			(100 * vol / 15, vol, self.sid.used_bw))
+
 class MainWindow(QtGui.QWidget):
 	def __init__(self, parent = None):
 		QtGui.QWidget.__init__(self, parent)
@@ -385,8 +406,12 @@ class MainWindow(QtGui.QWidget):
 			voicebox.addWidget(VoiceWidget(v, voices))
 		voices.setLayout(voicebox)
 
+		stat_eff_hbox = QtGui.QHBoxLayout()
+		stat_eff_hbox.addWidget(SidStatusBox(sid, self))
+		stat_eff_hbox.addWidget(effects)
+
 		vbox = QtGui.QVBoxLayout()
-		vbox.addWidget(effects)
+		vbox.addLayout(stat_eff_hbox)
 		vbox.addWidget(voices)
 
 		self.setLayout(vbox)
