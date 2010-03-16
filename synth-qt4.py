@@ -96,13 +96,20 @@ class PianoInput(QtGui.QLineEdit):
 		self.output = output
 		self.resize(25, 25)
 		self.config = {}
-		self.connect(self, QtCore.SIGNAL('textEdited(QString)'), self.playnote)
 
-	def playnote(self, text):
-		self.clear()
-		self.output.playmidinote(
-			PianoInput.NOTESTART + PianoInput.NOTES.index(text[0]), 0.1)
-	
+	def keyReleaseEvent(self, event):
+		if not event.isAutoRepeat():
+			self.output.ungate()
+
+	def keyPressEvent(self, event):
+		if event.isAutoRepeat():
+			return
+		try:
+			keyindex = PianoInput.NOTES.index(chr(event.key()).lower())
+		except:
+			return
+		self.output.gatemidinote(PianoInput.NOTESTART + keyindex)
+
 	def setMenu(self, menu):
 		pass
 
@@ -113,6 +120,7 @@ class SequencerInput(QtGui.QLineEdit):
 		self.output = output
 		self.thread = None
 		self.record_mode = False
+		self.last_note = None
 		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
 		self.connect(self,
 			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
@@ -139,7 +147,16 @@ class SequencerInput(QtGui.QLineEdit):
 		self.record_mode = checked
 		self.base_note = None
 	
-	def playmidinote(self, note, delay):
+	def ungate(self):
+		if self.record_mode:
+			oldtext = self.text()
+			if oldtext != '':
+				self.setText(oldtext + str(int((time.time() - self.last_note) * 1000)))
+			self.last_note = time.time()
+		elif self.thread != None:
+			self.thread.stop_at_next = True
+
+	def gatemidinote(self, note):
 		if self.record_mode:
 			if self.base_note == None:
 				self.clear()
@@ -148,35 +165,42 @@ class SequencerInput(QtGui.QLineEdit):
 				oldtext = self.text()
 				if (oldtext != ''):
 					oldtext += ','
-				self.setText(oldtext + 'p-%d,%d-%d' %
-					((time.clock() - self.last_note) * 1000,
-					note - self.base_note, delay * 1000))
-			self.last_note = time.clock()
+				self.setText(oldtext + 'p-%d,%d-' %
+					((time.time() - self.last_note) * 1000,
+					note - self.base_note))
+			self.last_note = time.time()
 		else:
-			if self.thread != None:
-				self.thread.join()
-			self.thread = SequencerThread(self.text(), self.output, note)
-			self.thread.start()
+			if self.thread != None and self.thread.isAlive():
+				self.thread.base = note
+				self.thread.stop_at_next = False
+			else:
+				self.thread = SequencerThread(self, self.output, note)
+				self.thread.start()
 
 class SequencerThread(Thread):
-	def __init__(self, sequence, output, base):
+	def __init__(self, sequencer, output, base):
 		Thread.__init__(self)
 		self.output = output
-		self.sequence = sequence
+		self.sequencer = sequencer
 		self.base = base
+		self.stop_at_next = False
 	
 	def run(self):
-		for seq in self.sequence.split(','):
-			data = seq.split('-')
-			try:
-				delay = float(data[1]) / 1000
+		while not self.stop_at_next:
+			nbase = self.base
+			for seq in self.sequencer.text().split(','):
+				data = seq.split('-')
 				try:
-					self.output.playmidinote(
-						self.base + int(data[0]), delay)
-				except:
+					delay = float(data[1]) / 1000
+					try:
+						self.output.gatemidinote(
+							nbase + int(data[0]))
+					except:
+						pass
 					time.sleep(delay)
-			except:
-				pass
+					self.output.ungate()
+				except:
+					pass
 
 class NoteShifter(QtGui.QSpinBox):
 	DESC = 'note shifter'
@@ -203,9 +227,12 @@ class NoteShifter(QtGui.QSpinBox):
 
 	def setMenu(self, menu):
 		self.menu = menu
-	
-	def playmidinote(self, note, delay):
-		self.output.playmidinote(note + self.value(), delay)
+
+	def ungate(self):
+		self.output.ungate()
+
+	def gatemidinote(self, note):
+		self.output.gatemidinote(note + self.value())
 
 class VoiceWidget(QtGui.QWidget):
 	WAVEFORMS = {
@@ -312,41 +339,28 @@ class LooperEffect(QtGui.QPushButton):
 		QtGui.QPushButton.__init__(self, 'Looper', parent)
 		self.resize(100, 25)
 		self.output = output
-		self.lthread = None
+		self._running = False
 		self.config = {}
 		self.connect(self, QtCore.SIGNAL('clicked()'), self.clickd)
 	
 	def clickd(self):
-		self.lthread.stop_at_next()
-		self.lthread = None
+		self._running = False
+		self.output.ungate()
 		self.setMenu(self._tmpmenu)
 		self.setText('Looper')
-	
-	def playmidinote(self, note, delay):
-		if self.lthread != None:
-			self.lthread.stop_at_next()
-			self.lthread.join()
+
+	def ungate(self):
+		pass
+
+	def gatemidinote(self, note):
+		if self._running:
+			self.output.ungate()
 		else:
 			self._tmpmenu = self.menu()
-			self.setMenu(None)
 			self.setText('Stop')
-		self.lthread = LooperThread(self.output, note, delay)
-		self.lthread.start()
-
-class LooperThread(Thread):
-	def __init__(self, output, note, delay):
-		Thread.__init__(self)
-		self.output = output
-		self.note = note
-		self.delay = delay
-		self._san = False
-
-	def stop_at_next(self):
-		self._san = True
-
-	def run(self):
-		while not self._san:
-			self.output.playmidinote(self.note, self.delay)
+			self.setMenu(None)
+			self._running = True
+		self.output.gatemidinote(note)
 
 class VoiceSink(QtGui.QPushButton):
 	POOL = {}
@@ -358,8 +372,11 @@ class VoiceSink(QtGui.QPushButton):
 		self.config = {}
 		VoiceSink.POOL[voice] = self
 	
-	def playmidinote(self, note, delay):
-		self.voice.playmidinote(note, delay)
+	def gatemidinote(self, note):
+		self.voice.gatemidinote(note)
+
+	def ungate(self):
+		self.voice.ungate()
 
 class RouterWidget(QtGui.QLabel):
 	PADDING = 8

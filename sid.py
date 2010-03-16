@@ -41,8 +41,6 @@ class Voice(object):
 		self._decay = 12
 		self._sustain = 0
 		self._release = 4
-		self._gates = 0
-		self._gatelock = Lock()
 		self.pulse_width = 0.5
 		self.update_attack_decay()
 		self.update_sustain_release()
@@ -114,27 +112,21 @@ class Voice(object):
 	voicenum = property(get_voicenum)
 	pulse_width = property(get_pulse_width, set_pulse_width)
 
-	def playfreq(self, freq, delay):
+	def gatefreq(self, freq):
 		self.rawrite(self._voice * 7, freq & 0xFF)
 		self.rawrite(self._voice * 7 + 1, (freq >> 8) & 0xFF)
 		self.rawrite(self._voice * 7 + 4, self.waveform)
 		self.rawrite(self._voice * 7 + 4, self.waveform | 0x01)
-		self._gatelock.acquire()
-		self._gates += 1
-		self._gatelock.release()
-		time.sleep(delay)
-		self._gatelock.acquire()
-		self._gates -= 1
-		if self._gates == 0:
-			self.rawrite(self._voice * 7 + 4, self.waveform)
-		self._gatelock.release()
+
+	def ungate(self):
+		self.rawrite(self._voice * 7 + 4, self.waveform)
 
 	def rawrite(self, addr, data):
 		self._sid.rawrite(addr, data)
 
 	# play a note using MIDI values (69 = A4 [440 Hz], +- 1 / half note)
-	def playmidinote(self, note, delay):
-		self.playfreq(int(round(274 * (1.05946309436 ** (note - 12)))), delay)
+	def gatemidinote(self, note):
+		self.gatefreq(int(round(274 * (1.05946309436 ** (note - 12)))))
 
 # SID class -- an instance represents the whole SID chip
 class SID(object):

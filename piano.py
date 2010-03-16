@@ -99,7 +99,8 @@ try:
 		try:
 			c = sys.stdin.read(1)
 			try:
-				sid.playmidinote(notestart + notes.index(c), 0)
+				sid.ungate()
+				sid.gatemidinote(notestart + notes.index(c))
 			except ValueError: pass
 		except IOError: pass
 finally:
