@@ -121,7 +121,7 @@ class SequencerInput(QtGui.QLineEdit):
 		self.thread = None
 		self.record_mode = False
 		self.last_note = None
-		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
+		self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.connect(self,
 			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
 
