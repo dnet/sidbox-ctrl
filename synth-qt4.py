@@ -210,7 +210,7 @@ class NoteShifter(QtGui.QSpinBox):
 		self.setMaximum(100)
 		self.setMinimum(-100)
 		self.setValue(0)
-		self.setContextMenuPolicy(3) # Qt::CustomContextMenu
+		self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.connect(self,
 			QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.cmr)
 
