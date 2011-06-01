@@ -144,11 +144,7 @@ class SID(object):
 		self.used_bw = 0
 		self.process = Popen(catpath, stdin = PIPE)
 		self.volume = 15
-		self.voices = [
-			Voice(self, 0),
-			Voice(self, 1),
-			Voice(self, 2)
-		]
+		self.voices = [Voice(self, i) for i in xrange(3)]
 
 	def get_track_bw(self):
 		return self._track_bw
