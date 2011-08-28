@@ -31,6 +31,7 @@ from PyQt4 import QtGui, QtCore
 from optparse import OptionParser
 from threading import Thread
 from ConfigParser import RawConfigParser
+from itertools import imap, ifilter
 import sys
 import time
 import uuid
@@ -406,12 +407,12 @@ class RouterWidget(QtGui.QLabel):
 		return c
 
 	def arrange(self, cpos = 0, right = 0, scomp = None):
-		for c in filter(lambda x: x.output == scomp, self.components):
+		for c in ifilter(lambda x: x.output == scomp, self.components):
 			c.move(self.width() - right - c.width(), cpos)
 			cpos = max(cpos + c.height(),
 				self.arrange(cpos, right + c.width() + RouterWidget.PADDING, c))
 		if (scomp == None):
-			leftmost = min(map(lambda x: x.geometry().left(), self.components))
+			leftmost = min(imap(lambda x: x.geometry().left(), self.components))
 			self.setMinimumSize(self.width() - leftmost, cpos)
 			for c in self.components:
 				c.move(c.geometry().left() - leftmost, c.geometry().top())
@@ -559,10 +560,10 @@ class MainWindow(QtGui.QMainWindow):
 	def load_sink_state(self, sink, cp, sns):
 		for sn in sns.split(','):
 			cn = cp.get(sn, 'class')
-			c = filter(lambda x: x.__name__ == cn, RouterWidget.COMPONENTS)
-			comp = RouterWidget.SINGLETON.comp_callback(c[0], sink)
+			c = ifilter(lambda x: x.__name__ == cn, RouterWidget.COMPONENTS)
+			comp = RouterWidget.SINGLETON.comp_callback(next(c), sink)
 			config = {}
-			for i in filter(lambda x: x != 'class' and x != 'sources',
+			for i in ifilter(lambda x: x not in ('class', 'sources'),
 				cp.options(sn)): config[i] = cp.get(sn, i)
 			comp.config = config
 			try:
