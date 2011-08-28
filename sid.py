@@ -26,6 +26,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import with_statement
 from subprocess import Popen, PIPE
 from threading import Lock, Timer
 import time
@@ -175,10 +176,9 @@ class SID(object):
 		self.rawrite(0x18, self._volume & 0x0F)
 
 	def _update_bw(self):
-		self._bwtracker_lock.acquire()
-		self.used_bw = self._bytes_sent / SID.BW_MEASUREMENT_IV
-		self._bytes_sent = 0
-		self._bwtracker_lock.release()
+		with self._bwtracker_lock:
+			self.used_bw = self._bytes_sent / SID.BW_MEASUREMENT_IV
+			self._bytes_sent = 0
 		if self._track_bw:
 			t = Timer(SID.BW_MEASUREMENT_IV, self._update_bw)
 			t.start()
@@ -187,6 +187,5 @@ class SID(object):
 	def rawrite(self, addr, data):
 		self.process.stdin.write(chr(addr) + chr(data))
 		if self.track_bw:
-			self._bwtracker_lock.acquire()
-			self._bytes_sent += 2
-			self._bwtracker_lock.release()
+			with self._bwtracker_lock:
+				self._bytes_sent += 2

@@ -26,6 +26,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import with_statement
 from sid import SID
 from PyQt4 import QtGui, QtCore
 from optparse import OptionParser
@@ -503,23 +504,22 @@ class MainWindow(QtGui.QMainWindow):
 		fn = QtGui.QFileDialog.getSaveFileName(self, 'Save state')
 		if fn == '':
 			return
-		f = open(fn, 'w+')
-		cp = RawConfigParser()
-		sn = 'main'
-		cp.add_section(sn)
-		cp.set(sn, 'volume', sid.volume)
-		for v in sid.voices:
-			sn = 'voice%d' % v.voicenum
+		with open(fn, 'w+') as f:
+			cp = RawConfigParser()
+			sn = 'main'
 			cp.add_section(sn)
-			cp.set(sn, 'waveform', v.waveform)
-			cp.set(sn, 'pulse_width', v.pulse_width)
-			cp.set(sn, 'attack', v.attack)
-			cp.set(sn, 'decay', v.decay)
-			cp.set(sn, 'sustain', v.sustain)
-			cp.set(sn, 'release', v.release)
-			self.save_sink_state(VoiceSink.POOL[v], cp, sn)
-		cp.write(f)
-		f.close()
+			cp.set(sn, 'volume', sid.volume)
+			for v in sid.voices:
+				sn = 'voice%d' % v.voicenum
+				cp.add_section(sn)
+				cp.set(sn, 'waveform', v.waveform)
+				cp.set(sn, 'pulse_width', v.pulse_width)
+				cp.set(sn, 'attack', v.attack)
+				cp.set(sn, 'decay', v.decay)
+				cp.set(sn, 'sustain', v.sustain)
+				cp.set(sn, 'release', v.release)
+				self.save_sink_state(VoiceSink.POOL[v], cp, sn)
+			cp.write(f)
 
 	def save_sink_state(self, sink, cp, sn):
 		oid = str(uuid.uuid4())
