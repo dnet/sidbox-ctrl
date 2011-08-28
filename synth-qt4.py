@@ -522,7 +522,7 @@ class MainWindow(QtGui.QMainWindow):
 		f.close()
 
 	def save_sink_state(self, sink, cp, sn):
-		oid = uuid.uuid4()
+		oid = str(uuid.uuid4())
 		if cp.has_option(sn, 'sources'):
 			src = '%s,%s' % (cp.get(sn, 'sources'), oid)
 		else:
